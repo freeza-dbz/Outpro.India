@@ -10,8 +10,7 @@ const serviceSchema = new mongoose.Schema({
         required: true,
     },
     feature: {
-        type: [String],
-        required: true,
+        type: String,
     },
     icon: {
         type: String,

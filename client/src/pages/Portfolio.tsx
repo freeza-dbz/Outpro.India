@@ -1,63 +1,45 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Calendar } from 'lucide-react';
 
 type Project = {
-  id: string;
+  _id: string;
   title: string;
   description: string;
-  image_url: string;
-  technologies: string[];
-  client_name: string;
-  kpis: { value: string; label: string; unit: string }[];
-  completion_date?: string;
-  slug: string;
+  images?: string;
+  tags: string[];
+  client?: string;
   project_url?: string;
-  github_url?: string;
   is_featured: boolean;
-  is_active: boolean;
   display_order: number;
+  createdAt: string;
 };
 
 export default function Portfolio() {
-  const [projects] = useState<Project[]>([
-    {
-      id: '1',
-      title: 'E-commerce Platform',
-      description: 'A full-stack e-commerce solution with payment integration and user dashboards.',
-      image_url: '/placeholder.jpg',
-      technologies: ['React', 'Node.js', 'MongoDB'],
-      client_name: 'TechCorp',
-      kpis: [
-        { value: '65', label: 'Conversion lift', unit: '%' },
-        { value: '40', label: 'Faster page load', unit: '%' }
-      ],
-      completion_date: '2025-10-15',
-      slug: 'ecommerce-platform',
-      is_featured: true,
-      is_active: true,
-      display_order: 1
-    },
-    {
-      id: '2',
-      title: 'Portfolio Website',
-      description: 'A modern portfolio platform with admin editing and rich visuals.',
-      image_url: '/placeholder.jpg',
-      technologies: ['React', 'TypeScript', 'Tailwind'],
-      client_name: 'Creator Studio',
-      kpis: [
-        { value: '100', label: 'Portfolio launches', unit: '+' },
-        { value: '20', label: 'Design iterations', unit: '+' }
-      ],
-      completion_date: '2025-08-20',
-      slug: 'portfolio-website',
-      is_featured: true,
-      is_active: true,
-      display_order: 2
-    }
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/v1/portfolios')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setProjects(data.data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch projects", err);
+        setLoading(false);
+      });
+  }, []);
 
   return (
+    <>
+      {loading && (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      )}
+      {!loading && (
     <div>
       <section className="bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,14 +58,12 @@ export default function Portfolio() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {projects.map((project) => (
-              <Link
-                key={project.id}
-                to={`/portfolio/${project.slug}`}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-blue-200"
+              <div key={project._id}
+                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
               >
                 <div className="relative overflow-hidden h-64">
                   <img
-                    src={project.image_url}
+                    src={project.images || '/placeholder.jpg'}
                     alt={project.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     loading="lazy"
@@ -91,7 +71,7 @@ export default function Portfolio() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
                   <div className="absolute bottom-4 left-4 right-4">
                     <h3 className="text-white font-bold text-xl mb-1">{project.title}</h3>
-                    <p className="text-blue-300 text-sm font-semibold">{project.client_name}</p>
+                    <p className="text-blue-300 text-sm font-semibold">{project.client}</p>
                   </div>
                   {project.is_featured && (
                     <div className="absolute top-4 right-4 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
@@ -106,47 +86,28 @@ export default function Portfolio() {
                   </p>
 
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {project.technologies.slice(0, 3).map((tech, idx) => (
+                    {(project.tags || []).slice(0, 3).map((tag, idx) => (
                       <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                        {tech}
+                        {tag}
                       </span>
                     ))}
-                    {project.technologies.length > 3 && (
+                    {(project.tags || []).length > 3 && (
                       <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                        +{project.technologies.length - 3}
+                        +{(project.tags || []).length - 3}
                       </span>
                     )}
                   </div>
 
-                  {project.kpis.length > 0 && (
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      {project.kpis.slice(0, 2).map((kpi, idx) => (
-                        <div key={idx} className="bg-blue-50 p-3 rounded-lg">
-                          <div className="text-2xl font-bold text-blue-600">
-                            {kpi.value}{kpi.unit}
-                          </div>
-                          <div className="text-xs text-gray-600">{kpi.label}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {project.completion_date && (
-                    <div className="flex items-center text-sm text-gray-500 mb-4">
-                      <Calendar size={14} className="mr-1" />
-                      {new Date(project.completion_date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long'
-                      })}
-                    </div>
-                  )}
-
-                  <div className="flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
-                    View Case Study
-                    <ArrowRight className="ml-2" size={16} />
+                  <div className="flex items-center text-sm text-gray-500 mb-4">
+                    <Calendar size={14} className="mr-1" />
+                    {new Date(project.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long'
+                    })}
                   </div>
+
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </div>
@@ -170,5 +131,7 @@ export default function Portfolio() {
         </div>
       </section>
     </div>
+      )}
+    </>
   );
 }

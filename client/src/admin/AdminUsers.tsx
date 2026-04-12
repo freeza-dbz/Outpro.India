@@ -81,7 +81,7 @@ export default function AdminUsers() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/`, {
+      const response = await fetch(`${API_BASE_URL}/createUser`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({

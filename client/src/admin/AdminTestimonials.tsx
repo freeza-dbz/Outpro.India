@@ -26,6 +26,7 @@ export default function AdminTestimonials() {
     company: '',
     content: '',
     rating: 5,
+    display_order: 0,
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -111,6 +112,7 @@ export default function AdminTestimonials() {
           company: formData.company,
           content: formData.content,
           rating: formData.rating,
+          display_order: formData.display_order,
         }),
       });
 
@@ -144,6 +146,7 @@ export default function AdminTestimonials() {
           company: formData.company,
           content: formData.content,
           rating: formData.rating,
+          display_order: formData.display_order,
         }),
       });
 
@@ -162,6 +165,7 @@ export default function AdminTestimonials() {
           company: '',
           content: '',
           rating: 5,
+          display_order: 0,
         });
         fetchTestimonials();
       }
@@ -243,6 +247,13 @@ export default function AdminTestimonials() {
                 <option key={r} value={r}>{r} Stars</option>
               ))}
             </select>
+            <input
+              type="number"
+              placeholder="Display Order"
+              value={formData.display_order}
+              onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
+              className="w-full px-3 py-2 border border-gray-300 rounded"
+            />
             <div className="flex space-x-2">
               <button
                 onClick={handleCreate}
@@ -259,6 +270,7 @@ export default function AdminTestimonials() {
                     company: '',
                     content: '',
                     rating: 5,
+                    display_order: 0,
                   });
                 }}
                 className="flex items-center px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
@@ -315,6 +327,13 @@ export default function AdminTestimonials() {
                     <option key={r} value={r}>{r} Stars</option>
                   ))}
                 </select>
+                <input
+                  type="number"
+                  placeholder="Display Order"
+                  value={formData.display_order}
+                  onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                />
                 <div className="flex space-x-2">
                   <button
                     onClick={() => handleSave(testimonial._id)}
@@ -335,13 +354,16 @@ export default function AdminTestimonials() {
                 <div className="flex-grow">
                   <h3 className="text-lg font-bold text-gray-900 mb-1">{testimonial.name}</h3>
                   <p className="text-sm text-gray-600 mb-2">
-                    {testimonial.role} at {testimonial.company}
+                    {testimonial.role} @ {testimonial.company}
                   </p>
                   <p className="text-gray-700 mb-2 italic">"{testimonial.content}"</p>
-                  <div className="flex space-x-1">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <span key={i} className="text-yellow-400">★</span>
-                    ))}
+                  <div className="flex items-center space-x-4">
+                    <div className="flex space-x-1">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <span key={i} className="text-yellow-400">★</span>
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-500">Order: {testimonial.display_order}</p>
                   </div>
                 </div>
                 <div className="flex space-x-2 ml-4">
@@ -355,6 +377,7 @@ export default function AdminTestimonials() {
                         company: testimonial.company,
                         content: testimonial.content,
                         rating: testimonial.rating,
+                        display_order: testimonial.display_order,
                       });
                     }}
                     className="p-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"

@@ -10,17 +10,12 @@ import {
 
 const router = Router();
 
-// Public route 
-
-router.route("/getAllPortfolios").get(getAllPortfolios);
+// Public route to get all portfolio items
+router.route("/").get(getAllPortfolios);
 
 // Admin routes 
-
-router.route("/createPortfolio").post(verifyJWT, verifyAdmin, createPortfolio);
-
-router.route("/updatePortfolio/:id").patch(verifyJWT, verifyAdmin, updatePortfolio);
-
-router.route("/delete/:id").delete(verifyJWT, verifyAdmin, deletePortfolio);
-
+router.route("/").post(verifyJWT, verifyAdmin, createPortfolio);
+router.route("/:id").patch(verifyJWT, verifyAdmin, updatePortfolio);
+router.route("/:id").delete(verifyJWT, verifyAdmin, deletePortfolio);
 
 export default router;

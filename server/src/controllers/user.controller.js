@@ -376,6 +376,29 @@ const updateDetails = asyncHandler(async (req, res) => {
 
 })
 
+const createUser = asyncHandler(async (req, res) => {
+    const { fullName, email, password, username} = req.body;
+
+    if ([fullName, email, password, username].some((field) => !field || field.trim() === "")) {
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const user = await User.create({
+        fullName,
+        email,
+        password,
+        username
+    });
+
+    if (!user) {
+        throw new ApiError(500, "Something went wrong while creating the user");
+    }
+
+    return res
+        .status(201)
+        .json(new ApiResponse(201, user, "User created successfully"));
+});
+
 export {
     registerUser,
     loginUser,
@@ -389,4 +412,5 @@ export {
     fetchUserProfile,
     deleteUser,
     updateDetails,
+    createUser,
 };

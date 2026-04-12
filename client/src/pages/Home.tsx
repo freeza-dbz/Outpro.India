@@ -4,13 +4,10 @@ import { ArrowRight, CheckCircle, Users, Award, Star } from 'lucide-react';
 import * as Icons from 'lucide-react';
 
 type Service = {
-  id: string;
+  _id: string;
   title: string;
   description: string;
-  short_description?: string;
   icon: string;
-  slug?: string;
-  is_active: boolean;
   display_order: number;
 };
 
@@ -39,54 +36,19 @@ type Testimonial = {
 };
 
 type Project = {
-  id: string;
+  _id: string;
   title: string;
   description: string;
-  image_url: string;
-  technologies: string[];
+  images?: string;
+  tags: string[];
   project_url?: string;
-  github_url?: string;
-  client_name?: string;
-  kpis?: { value: string; label: string; unit: string }[];
-  slug?: string;
+  client?: string;
   is_featured: boolean;
-  is_active: boolean;
   display_order: number;
 };
 
 export default function Home() {
-  const [services, setServices] = useState<Service[]>([
-    {
-      id: '1',
-      title: 'Web Development',
-      description: 'Custom web applications built with modern technologies',
-      short_description: 'Custom web applications built with modern technologies',
-      icon: 'Code',
-      slug: 'web-development',
-      is_active: true,
-      display_order: 1
-    },
-    {
-      id: '2',
-      title: 'Mobile Apps',
-      description: 'Native and cross-platform mobile applications',
-      short_description: 'Native and cross-platform mobile applications',
-      icon: 'Smartphone',
-      slug: 'mobile-apps',
-      is_active: true,
-      display_order: 2
-    },
-    {
-      id: '3',
-      title: 'UI/UX Design',
-      description: 'Beautiful and intuitive user interfaces',
-      short_description: 'Beautiful and intuitive user interfaces',
-      icon: 'Palette',
-      slug: 'ui-ux-design',
-      is_active: true,
-      display_order: 3
-    }
-  ]);
+  const [services, setServices] = useState<Service[]>([]);
   const [metrics, setMetrics] = useState<Metric[]>([
     {
       id: '1',
@@ -112,36 +74,33 @@ export default function Home() {
     }
   ]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [featuredProjects, setFeaturedProjects] = useState<Project[]>([
-    {
-      id: '1',
-      title: 'E-commerce Platform',
-      description: 'Full-stack e-commerce solution with React, Node.js, and MongoDB',
-      image_url: '/placeholder.jpg',
-      technologies: ['React', 'Node.js', 'MongoDB'],
-      client_name: 'TechCorp',
-      kpis: [
-        { value: '50%', label: 'Increase in sales', unit: '%' },
-        { value: '2x', label: 'Faster load times', unit: 'x' }
-      ],
-      slug: 'ecommerce-platform',
-      is_featured: true,
-      is_active: true,
-      display_order: 1
-    }
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchHomeData = async () => {
       setLoading(true);
       try {
-        // Fetch testimonials
-        const testimonialsResponse = await fetch('http://localhost:8000/api/v1/testimonials/');
-        if (testimonialsResponse.ok) {
-            const testimonialsData = await testimonialsResponse.json();
-            if (testimonialsData.success) {
-                setTestimonials(testimonialsData.data);
+        const [testimonialsRes, servicesRes, portfolioRes] = await Promise.all([
+          fetch('http://localhost:8000/api/v1/testimonials/'),
+          fetch('http://localhost:8000/api/v1/services'),
+          fetch('http://localhost:8000/api/v1/portfolios'),
+        ]);
+
+        if (testimonialsRes.ok) {
+            const testimonialsData = await testimonialsRes.json();
+            if (testimonialsData.success) setTestimonials(testimonialsData.data);
+        }
+
+        if (servicesRes.ok) {
+            const servicesData = await servicesRes.json();
+            if (servicesData.success) setServices(servicesData.data.slice(0, 3)); // Show only first 3
+        }
+
+        if (portfolioRes.ok) {
+            const portfolioData = await portfolioRes.json();
+            if (portfolioData.success) {
+                setFeaturedProjects(portfolioData.data.filter((p: Project) => p.is_featured).slice(0, 3));
             }
         }
       } catch (error) {
@@ -214,7 +173,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {metrics.map((metric) => {
-              const Icon = getIcon(metric.icon);
+              const Icon = getIcon(metric.icon || 'Award');
               return (
                 <div key={metric.id} className="text-center">
                   <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
@@ -246,21 +205,16 @@ export default function Home() {
             {services.map((service) => {
               const Icon = getIcon(service.icon);
               return (
-                <Link
-                  key={service.id}
-                  to={`/services/${service.slug}`}
-                  className="bg-white rounded-xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-blue-200 group"
+                <div
+                  key={service._id}
+                  className="bg-white rounded-xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
                 >
                   <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-100 rounded-lg mb-6 group-hover:bg-blue-600 transition-colors">
                     <Icon className="text-blue-600 group-hover:text-white transition-colors" size={28} />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">{service.title}</h3>
-                  <p className="text-gray-600 mb-4 leading-relaxed">{service.short_description}</p>
-                  <div className="flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
-                    Learn More
-                    <ArrowRight className="ml-2" size={16} />
-                  </div>
-                </Link>
+                  <p className="text-gray-600 mb-4 leading-relaxed">{service.description}</p>
+                </div>
               );
             })}
           </div>
@@ -290,14 +244,13 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredProjects.map((project) => (
-              <Link
-                key={project.id}
-                to={`/portfolio/${project.slug}`}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
+              <div
+                key={project._id}
+                className="group bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100"
               >
                 <div className="relative overflow-hidden h-48">
                   <img
-                    src={project.image_url}
+                    src={project.images || '/placeholder.jpg'}
                     alt={project.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     loading="lazy"
@@ -308,21 +261,17 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="p-6">
-                  <p className="text-sm text-blue-600 font-semibold mb-2">{project.client_name}</p>
+                  <p className="text-sm text-blue-600 font-semibold mb-2">{project.client}</p>
                   <p className="text-gray-600 mb-4 line-clamp-2">{project.description}</p>
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {project.kpis.slice(0, 2).map((kpi, idx) => (
-                      <div key={idx} className="text-xs bg-gray-100 px-3 py-1 rounded-full">
-                        <span className="font-bold text-gray-900">{kpi.value}{kpi.unit}</span> {kpi.label}
-                      </div>
+                    {(project.tags || []).slice(0, 3).map((tag, idx) => (
+                      <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                        {tag}
+                      </span>
                     ))}
                   </div>
-                  <div className="flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
-                    View Case Study
-                    <ArrowRight className="ml-2" size={16} />
-                  </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
 

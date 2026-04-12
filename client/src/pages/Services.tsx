@@ -1,52 +1,33 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import * as Icons from 'lucide-react';
 
 type Service = {
-  id: string;
+  _id: string;
   title: string;
-  short_description: string;
+  description: string;
   icon: string;
-  slug: string;
-  features: string[];
-  is_active: boolean;
+  feature?: string;
   display_order: number;
 };
 
 export default function Services() {
-  const [services] = useState<Service[]>([
-    {
-      id: '1',
-      title: 'Web Development',
-      short_description: 'Custom web applications built with modern technologies.',
-      icon: 'Code',
-      slug: 'web-development',
-      features: ['Responsive design', 'API integration', 'Performance optimization'],
-      is_active: true,
-      display_order: 1
-    },
-    {
-      id: '2',
-      title: 'Mobile Apps',
-      short_description: 'Native and cross-platform mobile applications for your business.',
-      icon: 'Smartphone',
-      slug: 'mobile-apps',
-      features: ['iOS & Android', 'Push notifications', 'App store publishing'],
-      is_active: true,
-      display_order: 2
-    },
-    {
-      id: '3',
-      title: 'UI/UX Design',
-      short_description: 'Beautiful and intuitive user experiences across devices.',
-      icon: 'Palette',
-      slug: 'ui-ux-design',
-      features: ['User research', 'Prototyping', 'Design systems'],
-      is_active: true,
-      display_order: 3
-    }
-  ]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/v1/services')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setServices(data.data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch services", err);
+        setLoading(false);
+      });
+  }, []);
 
   const getIcon = (iconName: string) => {
     const IconComponent = (Icons as any)[iconName];
@@ -54,6 +35,13 @@ export default function Services() {
   };
 
   return (
+    <>
+      {loading && (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      )}
+      {!loading && (
     <div>
       <section className="bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -75,7 +63,7 @@ export default function Services() {
               const Icon = getIcon(service.icon);
               return (
                 <div
-                  key={service.id}
+                  key={service._id}
                   className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-2xl transition-all duration-300 border-2 border-gray-100 hover:border-blue-200 group"
                 >
                   <div className="flex items-start space-x-6">
@@ -86,10 +74,10 @@ export default function Services() {
                     </div>
                     <div className="flex-grow">
                       <h3 className="text-2xl font-bold text-gray-900 mb-3">{service.title}</h3>
-                      <p className="text-gray-600 mb-6 leading-relaxed">{service.short_description}</p>
+                      <p className="text-gray-600 mb-6 leading-relaxed">{service.description}</p>
 
                       <div className="space-y-2 mb-6">
-                        {service.features.map((feature, idx) => (
+                        {service.feature?.split('\n').map((feature, idx) => (
                           <div key={idx} className="flex items-start space-x-2">
                             <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2"></div>
                             <span className="text-sm text-gray-600">{feature}</span>
@@ -97,13 +85,6 @@ export default function Services() {
                         ))}
                       </div>
 
-                      <Link
-                        to={`/services/${service.slug}`}
-                        className="inline-flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform"
-                      >
-                        Learn More
-                        <ArrowRight className="ml-2" size={18} />
-                      </Link>
                     </div>
                   </div>
                 </div>
@@ -131,5 +112,7 @@ export default function Services() {
         </div>
       </section>
     </div>
+      )}
+    </>
   );
 }

@@ -15,6 +15,7 @@ import {
     fetchUserProfile,
     deleteUser,
     updateDetails,
+    createUser,
 } from "../controllers/user.controller.js";
 
 const router = Router();
@@ -47,6 +48,7 @@ router.route("/delete/:id").delete(verifyJWT, verifyAdmin, deleteUser);
 
 router.route("/updateDetails/:id").patch(verifyJWT, verifyAdmin, updateDetails);
 
+router.route("/createUser").post(verifyJWT, verifyAdmin, createUser);
 
 
 export default router;

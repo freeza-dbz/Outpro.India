@@ -2,81 +2,171 @@ import { useEffect, useState } from 'react';
 import { Plus, Trash2, CreditCard as Edit2, Check, X } from 'lucide-react';
 
 type Project = {
-  id: string;
+  _id: string;
   title: string;
   description: string;
-  image_url: string;
-  client_name?: string;
-  technologies: string[];
+  category: string;
+  client?: string;
+  project_url?: string;
+  images?: string;
+  tags: string[];
   is_featured: boolean;
-  is_active: boolean;
   display_order: number;
 };
 
+const API_BASE_URL = 'http://localhost:8000/api/v1/portfolios';
+
 export default function AdminPortfolio() {
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: '1',
-      title: 'E-commerce Platform',
-      description: 'Full-stack solution',
-      image_url: '/placeholder.jpg',
-      technologies: ['React', 'Node.js'],
-      client_name: 'TechCorp',
-      is_featured: true,
-      is_active: true,
-      display_order: 1
-    }
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    image_url: '',
-    client_name: '',
-    technologies: '',
+    category: '',
+    client: '',
+    project_url: '',
+    images: '', // Comma-separated URLs
+    tags: '', // Comma-separated tags
   });
 
   useEffect(() => {
     fetchProjects();
   }, []);
 
+  const getAuthHeaders = () => {
+    let token = localStorage.getItem('token');
+    
+    // Fallback if token wasn't saved correctly but exists in the user object
+    if (!token || token === 'undefined') {
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      token = userData?.accessToken || userData?.token || '';
+    }
+
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    };
+  };
+
   const fetchProjects = async () => {
-    // const response = await fetch('YOUR_API_URL/projects');
-    // const data = await response.json();
-    // if (data) setProjects(data);
-    setLoading(false);
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch(API_BASE_URL);
+      if (!response.ok) throw new Error('Failed to fetch projects');
+      const result = await response.json();
+      if (result.success) {
+        setProjects(result.data);
+      } else {
+        setError(result.message);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure?')) return;
-    // await fetch(`YOUR_API_URL/projects/${id}`, { method: 'DELETE' });
-    setProjects(projects.filter(p => p.id !== id));
-  };
-
-  const handleCreateProject = async () => {
     setError('');
     setSuccess('');
-    if (!formData.title || !formData.description) {
-      setError('Title and description are required.');
-      return;
+    try {
+      await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+      setSuccess('Project deleted successfully!');
+      setProjects(projects.filter(p => p._id !== id));
+    } catch (err: any) {
+      setError(err.message);
     }
+  };
 
-    // await fetch(`YOUR_API_URL/projects`, { method: 'POST', body: JSON.stringify(formData) });
-    
-    setSuccess('Project created successfully! (dummy)');
-    setShowForm(false);
+  const handleFormSubmit = async () => {
+    if (editingId) {
+      await handleUpdateProject(editingId);
+    } else {
+      await handleCreateProject();
+    }
+  };
+
+  const resetForm = () => {
     setFormData({
       title: '',
       description: '',
-      image_url: '',
-      client_name: '',
-      technologies: '',
+      category: '',
+      client: '',
+      project_url: '',
+      images: '',
+      tags: '',
     });
-    // After success:
-    // fetchProjects();
+    setEditingId(null);
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    resetForm();
+  };
+
+  const preparePayload = () => {
+    const tags = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+
+    if (!formData.title || !formData.description || !formData.category) {
+      setError('Title, description, and category are required.');
+      return null;
+    }
+
+    return { ...formData, images: formData.images, tags };
+  }
+
+  const handleCreateProject = async () => { 
+    setError('');
+    setSuccess('');
+    const payload = preparePayload();
+    if (!payload) return;
+
+    try {
+      const response = await fetch(API_BASE_URL, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Failed to create project.');
+
+      setSuccess('Project created successfully!');
+      setShowForm(false);
+      resetForm();
+      fetchProjects();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleUpdateProject = async (id: string) => {
+    setError('');
+    setSuccess('');
+    const payload = preparePayload();
+    if (!payload) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/${id}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Failed to update project.');
+
+      setSuccess('Project updated successfully!');
+      setShowForm(false);
+      resetForm();
+      fetchProjects();
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   if (loading) {
@@ -88,7 +178,10 @@ export default function AdminPortfolio() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Portfolio Projects</h2>
         <button 
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            setShowForm(!showForm);
+            if (editingId) resetForm();
+          }}
           className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           <Plus size={18} className="mr-2" />
@@ -110,7 +203,7 @@ export default function AdminPortfolio() {
 
       {showForm && (
         <div className="border border-gray-200 rounded-lg p-6 mb-6 bg-gray-50">
-          <h3 className="text-lg font-semibold mb-4">Add New Project</h3>
+          <h3 className="text-lg font-semibold mb-4">{editingId ? 'Edit Project' : 'Add New Project'}</h3>
           <div className="space-y-4">
             <input
               type="text"
@@ -128,23 +221,44 @@ export default function AdminPortfolio() {
             />
             <input
               type="text"
-              placeholder="Client Name"
-              value={formData.client_name}
-              onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
+              placeholder="Category (e.g., Web Development)"
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded"
             />
             <input
               type="text"
-              placeholder="Technologies (comma-separated)"
-              value={formData.technologies}
-              onChange={(e) => setFormData({ ...formData, technologies: e.target.value })}
+              placeholder="Client"
+              value={formData.client}
+              onChange={(e) => setFormData({ ...formData, client: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded"
+            />
+            <input
+              type="text"
+              placeholder="Project URL"
+              value={formData.project_url}
+              onChange={(e) => setFormData({ ...formData, project_url: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded"
+            />
+            <input
+              type="text"
+              placeholder="Image URL"
+              value={formData.images}
+              onChange={(e) => setFormData({ ...formData, images: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded"
+            />
+            <input
+              type="text"
+              placeholder="Tags (comma-separated)"
+              value={formData.tags}
+              onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded"
             />
             <div className="flex space-x-2">
-              <button onClick={handleCreateProject} className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                <Check size={18} className="mr-1" /> Create
+              <button onClick={handleFormSubmit} className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                <Check size={18} className="mr-1" /> {editingId ? 'Save' : 'Create'}
               </button>
-              <button onClick={() => setShowForm(false)} className="flex items-center px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
+              <button onClick={handleCancel} className="flex items-center px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
                 <X size={18} className="mr-1" /> Cancel
               </button>
             </div>
@@ -154,22 +268,38 @@ export default function AdminPortfolio() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project) => (
-          <div key={project.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+          <div key={project._id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
             <img
-              src={project.image_url}
+              src={project.images || '/placeholder.jpg'}
               alt={project.title}
               className="w-full h-48 object-cover"
             />
             <div className="p-4">
               <h3 className="font-bold text-gray-900 mb-1">{project.title}</h3>
               <p className="text-sm text-gray-600 mb-3 line-clamp-2">{project.description}</p>
-              <p className="text-xs text-blue-600 mb-4">{project.client_name}</p>
+              <p className="text-xs text-blue-600 mb-4">{project.client}</p>
               <div className="flex space-x-2">
-                <button className="flex-1 p-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 flex items-center justify-center">
+                <button 
+                  onClick={() => {
+                    setEditingId(project._id);
+                    setFormData({
+                      title: project.title,
+                      description: project.description,
+                      category: project.category,
+                      client: project.client || '',
+                      project_url: project.project_url || '',
+                      images: project.images || '',
+                      tags: project.tags.join(', '),
+                    });
+                    setShowForm(true);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="flex-1 p-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 flex items-center justify-center"
+                >
                   <Edit2 size={16} />
                 </button>
                 <button
-                  onClick={() => handleDelete(project.id)}
+                  onClick={() => handleDelete(project._id)}
                   className="flex-1 p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 flex items-center justify-center"
                 >
                   <Trash2 size={16} />

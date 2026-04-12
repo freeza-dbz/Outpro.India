@@ -2,102 +2,128 @@ import { useEffect, useState } from 'react';
 import { Plus, Trash2, CreditCard as Edit2, Check, X, Code } from 'lucide-react';
 
 type Service = {
-  id: string;
+  _id: string;
   title: string;
   description: string;
+  feature?: string;
   icon: string;
-  is_active: boolean;
   display_order: number;
-  slug: string;
-  short_description: string;
-  full_description: string;
-  features: string[];
 };
 
+const API_BASE_URL = 'http://localhost:8000/api/v1/services';
+
 export default function AdminServices() {
-  const [services, setServices] = useState<Service[]>([
-    {
-      id: '1',
-      title: 'Web Development',
-      description: 'Custom web applications',
-      icon: 'Code',
-      is_active: true,
-      display_order: 1,
-      slug: 'web-development',
-      short_description: 'Custom web applications',
-      full_description: 'Full description here',
-      features: ['Feature 1', 'Feature 2']
-    }
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [formData, setFormData] = useState({
     title: '',
-    slug: '',
-    short_description: '',
-    full_description: '',
+    description: '',
     icon: '',
-    features: '',
+    feature: '',
+    display_order: 0,
   });
 
   useEffect(() => {
-    // fetchServices();
+    fetchServices();
   }, []);
 
+  const getAuthHeaders = () => {
+    let token = localStorage.getItem('token');
+    
+    // Fallback if token wasn't saved correctly but exists in the user object
+    if (!token || token === 'undefined') {
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      token = userData?.accessToken || userData?.token || '';
+    }
+
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    };
+  };
+
   const fetchServices = async () => {
-    // Dummy
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch(API_BASE_URL);
+      if (!response.ok) throw new Error('Failed to fetch services.');
+      const result = await response.json();
+      if (result.success) {
+        setServices(result.data);
+      } else {
+        setError(result.message);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure?')) return;
-    // await fetch(`YOUR_API_URL/services/${id}`, { method: 'DELETE' });
-    setServices(services.filter(s => s.id !== id));
+    setError('');
+    setSuccess('');
+    try {
+      await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+      setSuccess('Service deleted successfully!');
+      setServices(services.filter(s => s._id !== id));
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   const handleSave = async (id: string) => {
-    const features = formData.features
-      .split('\n')
-      .map(f => f.trim())
-      .filter(f => f);
+    const payload = { ...formData, display_order: Number(formData.display_order) };
 
-    // await fetch(`YOUR_API_URL/services/${id}`, { method: 'PATCH', body: JSON.stringify({...formData}) });
+    try {
+      const response = await fetch(`${API_BASE_URL}/${id}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Failed to update service.');
 
-    setEditing(null);
+      setSuccess('Service updated successfully!');
+      setEditing(null);
+      fetchServices();
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   const handleCreate = async () => {
     setError('');
     setSuccess('');
 
-    if (!formData.title || !formData.short_description) {
+    if (!formData.title || !formData.description) {
       setError('Title and description are required.');
       return;
     }
+    const payload = { ...formData, display_order: Number(formData.display_order) };
 
-    const features = formData.features
-      .split('\n')
-      .map(f => f.trim())
-      .filter(f => f);
+    try {
+      const response = await fetch(API_BASE_URL, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Failed to create service.');
 
-    // await fetch(`YOUR_API_URL/services`, { 
-    //   method: 'POST', 
-    //   body: JSON.stringify({ ...formData, features }) 
-    // });
-
-    setSuccess('Service created successfully! (dummy)');
-    setShowForm(false);
-    setFormData({
-      title: '',
-      slug: '',
-      short_description: '',
-      full_description: '',
-      icon: '',
-      features: '',
-    });
-    // fetchServices();
+      setSuccess('Service created successfully!');
+      setShowForm(false);
+      setFormData({ title: '', description: '', icon: '', feature: '', display_order: 0 });
+      fetchServices();
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   const getIcon = (iconName: string) => {
@@ -117,7 +143,7 @@ export default function AdminServices() {
           onClick={() => {
             setEditing(null);
             setShowForm(!showForm);
-            setFormData({ title: '', slug: '', short_description: '', full_description: '', icon: '', features: '' });
+            setFormData({ title: '', description: '', icon: '', feature: '', display_order: 0 });
           }}
           className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
@@ -146,20 +172,34 @@ export default function AdminServices() {
               type="text"
               placeholder="Title"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value, })}
               className="w-full px-3 py-2 border border-gray-300 rounded"
             />
             <textarea
               placeholder="Short Description"
-              value={formData.short_description}
-              onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded"
               rows={2}
             />
+            <input
+              type="text"
+              placeholder="Icon Name (e.g., Code)"
+              value={formData.icon}
+              onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded"
+            />
+            <input
+              type="number"
+              placeholder="Display Order"
+              value={formData.display_order}
+              onChange={(e) => setFormData({ ...formData, display_order: Number(e.target.value) })}
+              className="w-full px-3 py-2 border border-gray-300 rounded"
+            />
             <textarea
               placeholder="Features (one per line)"
-              value={formData.features}
-              onChange={(e) => setFormData({ ...formData, features: e.target.value })}
+              value={formData.feature}
+              onChange={(e) => setFormData({ ...formData, feature: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded"
               rows={3}
             />
@@ -178,10 +218,10 @@ export default function AdminServices() {
       <div className="space-y-4">
         {services.map((service) => (
           <div
-            key={service.id}
+            key={service._id}
             className="border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition-colors"
           >
-            {editing === service.id ? (
+            {editing === service._id ? (
               <div className="space-y-4">
                 <input
                   type="text"
@@ -192,21 +232,35 @@ export default function AdminServices() {
                 />
                 <textarea
                   placeholder="Short Description"
-                  value={formData.short_description}
-                  onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded"
                   rows={2}
                 />
+                <input
+                  type="text"
+                  placeholder="Icon Name (e.g., Code)"
+                  value={formData.icon}
+                  onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                />
+                <input
+                  type="number"
+                  placeholder="Display Order"
+                  value={formData.display_order}
+                  onChange={(e) => setFormData({ ...formData, display_order: Number(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                />
                 <textarea
                   placeholder="Features (one per line)"
-                  value={formData.features}
-                  onChange={(e) => setFormData({ ...formData, features: e.target.value })}
+                  value={formData.feature}
+                  onChange={(e) => setFormData({ ...formData, feature: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded"
                   rows={3}
                 />
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => handleSave(service.id)}
+                    onClick={() => handleSave(service._id)}
                     className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                   >
                     <Check size={18} className="mr-1" /> Save
@@ -223,9 +277,9 @@ export default function AdminServices() {
               <div className="flex justify-between items-start">
                 <div className="flex-grow">
                   <h3 className="text-lg font-bold text-gray-900 mb-2">{service.title}</h3>
-                  <p className="text-gray-600 mb-3">{service.short_description}</p>
+                  <p className="text-gray-600 mb-3">{service.description}</p>
                   <div className="flex flex-wrap gap-2">
-                    {service.features.slice(0, 3).map((feature, idx) => (
+                    {service.feature && service.feature.split('\n').slice(0, 3).map((feature, idx) => (
                       <span key={idx} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
                         {feature}
                       </span>
@@ -235,14 +289,13 @@ export default function AdminServices() {
                 <div className="flex space-x-2 ml-4">
                   <button
                     onClick={() => {
-                      setEditing(service.id);
+                      setEditing(service._id);
                       setFormData({
                         title: service.title,
-                        slug: service.slug,
-                        short_description: service.short_description,
-                        full_description: service.full_description,
+                        description: service.description,
                         icon: service.icon,
-                        features: service.features.join('\n'),
+                        feature: service.feature || '',
+                        display_order: service.display_order,
                       });
                     }}
                     className="p-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
@@ -250,7 +303,7 @@ export default function AdminServices() {
                     <Edit2 size={18} />
                   </button>
                   <button
-                    onClick={() => handleDelete(service.id)}
+                    onClick={() => handleDelete(service._id)}
                     className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
                   >
                     <Trash2 size={18} />

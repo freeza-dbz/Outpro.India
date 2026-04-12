@@ -10,16 +10,12 @@ import {
 
 const router = Router();
 
-// Public route 
-
-router.route("/getAllServices").get(getAllServices);
+// Public route to get all services
+router.route("/").get(getAllServices);
 
 // Admin routes 
-
-router.route("/createService").post(verifyJWT, verifyAdmin, createService);
-
-router.route("/updateService/:id").patch(verifyJWT, verifyAdmin, updateService);
-
-router.route("/delete/:id").delete(verifyJWT, verifyAdmin, deleteService);
+router.route("/").post(verifyJWT, verifyAdmin, createService);
+router.route("/:id").patch(verifyJWT, verifyAdmin, updateService);
+router.route("/:id").delete(verifyJWT, verifyAdmin, deleteService);
 
 export default router;

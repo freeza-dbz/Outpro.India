@@ -24,10 +24,6 @@ const createPortfolio = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Title, description, and category are required");
     }
 
-    if (!images) {
-        throw new ApiError(400, "Image is required");
-    }
-
     const portfolio = await Portfolio.create({
         title,
         description,
