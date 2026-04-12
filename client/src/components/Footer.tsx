@@ -50,34 +50,13 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/testimonials" className="text-sm hover:text-blue-400 transition-colors">
+                  Testimonials
+                </Link>
+              </li>
+              <li>
                 <Link to="/contact" className="text-sm hover:text-blue-400 transition-colors">
                   Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-white font-semibold mb-4">Services</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/services/web-development" className="text-sm hover:text-blue-400 transition-colors">
-                  Web Development
-                </Link>
-              </li>
-              <li>
-                <Link to="/services/mobile-development" className="text-sm hover:text-blue-400 transition-colors">
-                  Mobile Apps
-                </Link>
-              </li>
-              <li>
-                <Link to="/services/cloud-solutions" className="text-sm hover:text-blue-400 transition-colors">
-                  Cloud Solutions
-                </Link>
-              </li>
-              <li>
-                <Link to="/services/ui-ux-design" className="text-sm hover:text-blue-400 transition-colors">
-                  UI/UX Design
                 </Link>
               </li>
             </ul>

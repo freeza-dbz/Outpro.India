@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Users, Award, Star } from 'lucide-react';
+import { ArrowRight, Star } from 'lucide-react';
 import * as Icons from 'lucide-react';
 
 type Service = {
@@ -12,7 +12,7 @@ type Service = {
 };
 
 type Metric = {
-  id: string;
+  _id: string;
   title: string;
   value: string;
   description: string;
@@ -49,30 +49,7 @@ type Project = {
 
 export default function Home() {
   const [services, setServices] = useState<Service[]>([]);
-  const [metrics, setMetrics] = useState<Metric[]>([
-    {
-      id: '1',
-      title: 'Projects Completed',
-      value: '50',
-      description: 'Successful projects delivered',
-      icon: 'CheckCircle',
-      suffix: '+',
-      label: 'Projects Completed',
-      is_active: true,
-      display_order: 1
-    },
-    {
-      id: '2',
-      title: 'Happy Clients',
-      value: '30',
-      description: 'Satisfied customers',
-      icon: 'Users',
-      suffix: '+',
-      label: 'Happy Clients',
-      is_active: true,
-      display_order: 2
-    }
-  ]);
+  const [metrics, setMetrics] = useState<Metric[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,10 +58,11 @@ export default function Home() {
     const fetchHomeData = async () => {
       setLoading(true);
       try {
-        const [testimonialsRes, servicesRes, portfolioRes] = await Promise.all([
+        const [testimonialsRes, servicesRes, portfolioRes, metricsRes] = await Promise.all([
           fetch('http://localhost:8000/api/v1/testimonials/'),
           fetch('http://localhost:8000/api/v1/services'),
           fetch('http://localhost:8000/api/v1/portfolios'),
+          fetch('http://localhost:8000/api/v1/metrics'),
         ]);
 
         if (testimonialsRes.ok) {
@@ -102,6 +80,11 @@ export default function Home() {
             if (portfolioData.success) {
                 setFeaturedProjects(portfolioData.data.filter((p: Project) => p.is_featured).slice(0, 3));
             }
+        }
+
+        if (metricsRes.ok) {
+            const metricsData = await metricsRes.json();
+            if (metricsData.success) setMetrics(metricsData.data.slice(0, 4)); // Show up to 4
         }
       } catch (error) {
           console.error("Failed to fetch testimonials", error);
@@ -175,7 +158,7 @@ export default function Home() {
             {metrics.map((metric) => {
               const Icon = getIcon(metric.icon || 'Award');
               return (
-                <div key={metric.id} className="text-center">
+                <div key={metric._id} className="text-center">
                   <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
                     <Icon className="text-blue-600" size={24} />
                   </div>
