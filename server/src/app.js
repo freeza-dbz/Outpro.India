@@ -36,6 +36,8 @@ import teamRouter from "./routes/team.routes.js";
 
 import metricRouter from "./routes/metric.routes.js";
 
+import contactRouter from "./routes/contact.routes.js";
+
 // routes declaration
 
 app.use("/api/v1/users", userRouter);
@@ -51,5 +53,7 @@ app.use("/api/v1/about", aboutRouter);
 app.use("/api/v1/team", teamRouter);
 
 app.use("/api/v1/metrics", metricRouter);
+
+app.use("/api/v1/contact", contactRouter);
 
 export { app };

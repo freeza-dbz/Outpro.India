@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, BarChart3, Settings, Briefcase, MessageSquare, UserCheck, ConciergeBell, UsersRound, TrendingUp } from 'lucide-react';
+import { LogOut, BarChart3, Settings, Briefcase, MessageSquare, UserCheck, ConciergeBell, UsersRound, TrendingUp, Mail } from 'lucide-react';
 import AdminServices from '../admin/AdminServices';
 import AdminPortfolio from '../admin/AdminPortfolio';
 import AdminTestimonials from '../admin/AdminTestimonials';
 import AdminTeam from '../admin/AdminTeam';
+import AdminContact from '../admin/AdminContact';
 import AdminMetrics from '../admin/AdminMetrics';
 import AdminSettings from '../admin/AdminSettings';
 import AdminUsers from '../admin/AdminUsers';
@@ -61,6 +62,7 @@ export default function Admin() {
     { id: 'portfolio', label: 'Portfolio', icon: Briefcase },
     { id: 'testimonials', label: 'Testimonials', icon: MessageSquare },
     { id: 'metrics', label: 'Metrics', icon: TrendingUp },
+    { id: 'contact', label: 'Contact', icon: Mail },
     { id: 'team', label: 'Team', icon: UsersRound },
     { id: 'users', label: 'Users', icon: UserCheck },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -110,6 +112,7 @@ export default function Admin() {
           {activeTab === 'services' && <AdminServices />}
           {activeTab === 'portfolio' && <AdminPortfolio />}
           {activeTab === 'testimonials' && <AdminTestimonials />}
+          {activeTab === 'contact' && <AdminContact />}
           {activeTab === 'metrics' && <AdminMetrics />}
           {activeTab === 'team' && <AdminTeam />}
           {activeTab === 'users' && <AdminUsers />}
