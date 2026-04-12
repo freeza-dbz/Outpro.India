@@ -1,21 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Linkedin, Target, Eye, Heart } from 'lucide-react';
 
 type CompanyInfo = {
-  id: string;
+  _id?: string;
   mission: string;
   vision: string;
   story: string;
-  founded_year: number;
+  founded_year?: number;
   values: { title: string; description: string }[];
 };
 
 type TeamMember = {
-  id: string;
+  _id: string;
   name: string;
   position: string;
   bio: string;
-  image_url?: string;
   avatar_url?: string;
   linkedin_url?: string;
   department?: string;
@@ -25,57 +24,48 @@ type TeamMember = {
 };
 
 export default function About() {
-  const [companyInfo] = useState<CompanyInfo>({
-    id: '1',
-    mission: 'To deliver exceptional digital solutions',
-    vision: 'To be a leading provider of innovative technology services',
-    story: 'We are a team of passionate developers, designers, and strategists focused on helping businesses grow through meaningful digital experiences.',
-    founded_year: 2022,
-    values: [
-      { title: 'Quality', description: 'We build reliable, high-performing solutions.' },
-      { title: 'Collaboration', description: 'We partner closely with every client.' },
-      { title: 'Innovation', description: 'We embrace modern technology and creativity.' }
-    ]
-  });
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [teamMembers] = useState<TeamMember[]>([
-    {
-      id: '1',
-      name: 'Anmol Singh',
-      position: 'Founder & CEO',
-      bio: 'Leading product strategy and engineering for high-impact digital services.',
-      avatar_url: '/placeholder.jpg',
-      linkedin_url: 'https://www.linkedin.com',
-      department: 'Leadership',
-      is_leadership: true,
-      is_active: true,
-      display_order: 1
-    },
-    {
-      id: '2',
-      name: 'Priya Sharma',
-      position: 'Product Designer',
-      bio: 'Crafting engaging digital experiences and polished UI systems.',
-      image_url: '/placeholder.jpg',
-      linkedin_url: 'https://www.linkedin.com',
-      department: 'Design',
-      is_leadership: false,
-      is_active: true,
-      display_order: 2
-    },
-    {
-      id: '3',
-      name: 'Rohit Verma',
-      position: 'Lead Engineer',
-      bio: 'Building scalable web and API platforms with modern architecture.',
-      image_url: '/placeholder.jpg',
-      linkedin_url: 'https://www.linkedin.com',
-      department: 'Engineering',
-      is_leadership: false,
-      is_active: true,
-      display_order: 3
-    }
-  ]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [aboutRes, teamRes] = await Promise.all([
+          fetch('http://localhost:8000/api/v1/about'),
+          fetch('http://localhost:8000/api/v1/team'),
+        ]);
+
+        const aboutData = await aboutRes.json();
+        if (aboutData.success) setCompanyInfo(aboutData.data);
+
+        const teamData = await teamRes.json();
+        if (teamData.success) setTeamMembers(teamData.data);
+
+      } catch (err) {
+        console.error("Failed to fetch page data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!companyInfo || !teamMembers) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Could not load company information.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -99,9 +89,11 @@ export default function About() {
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Our Story</h2>
               <div className="prose prose-lg text-gray-600">
                 <p className="leading-relaxed mb-4">{companyInfo.story}</p>
-                <p className="text-blue-600 font-semibold">
-                  Since {companyInfo.founded_year}, we've been at the forefront of digital innovation.
-                </p>
+                {companyInfo.founded_year && (
+                  <p className="text-blue-600 font-semibold">
+                    Since {companyInfo.founded_year}, we've been at the forefront of digital innovation.
+                  </p>
+                )}
               </div>
             </div>
             <div className="relative">
@@ -164,7 +156,7 @@ export default function About() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {teamMembers.filter(member => member.is_leadership).map((member) => (
-              <div key={member.id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
+              <div key={member._id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
                 <div className="aspect-square bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center">
                   {member.avatar_url ? (
                     <img
@@ -213,7 +205,7 @@ export default function About() {
 
           <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
             {teamMembers.filter(member => !member.is_leadership).map((member) => (
-              <div key={member.id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
+              <div key={member._id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
                 <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                   {member.avatar_url ? (
                     <img
