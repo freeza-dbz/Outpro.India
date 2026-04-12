@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Plus, Trash2, CreditCard as Edit2, Check, X, Code } from 'lucide-react';
+import { iconList } from './iconList';
 
 type Service = {
   _id: string;
@@ -182,13 +183,18 @@ export default function AdminServices() {
               className="w-full px-3 py-2 border border-gray-300 rounded"
               rows={2}
             />
-            <input
-              type="text"
-              placeholder="Icon Name (e.g., Code)"
+            <select
               value={formData.icon}
               onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded"
-            />
+            >
+              <option value="">Select an icon</option>
+              {iconList.map((iconName) => (
+                <option key={iconName} value={iconName}>
+                  {iconName}
+                </option>
+              ))}
+            </select>
             <input
               type="number"
               placeholder="Display Order"
@@ -237,13 +243,18 @@ export default function AdminServices() {
                   className="w-full px-3 py-2 border border-gray-300 rounded"
                   rows={2}
                 />
-                <input
-                  type="text"
-                  placeholder="Icon Name (e.g., Code)"
+                <select
                   value={formData.icon}
                   onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded"
-                />
+                >
+                  <option value="">Select an icon</option>
+                  {iconList.map((iconName) => (
+                    <option key={iconName} value={iconName}>
+                      {iconName}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="number"
                   placeholder="Display Order"

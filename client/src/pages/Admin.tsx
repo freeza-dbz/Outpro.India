@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, BarChart3, Settings, Briefcase, MessageSquare, UserCheck, ConciergeBell } from 'lucide-react';
+import { LogOut, BarChart3, Settings, Briefcase, MessageSquare, UserCheck, ConciergeBell, UsersRound, TrendingUp } from 'lucide-react';
 import AdminServices from '../admin/AdminServices';
 import AdminPortfolio from '../admin/AdminPortfolio';
 import AdminTestimonials from '../admin/AdminTestimonials';
+import AdminTeam from '../admin/AdminTeam';
+import AdminMetrics from '../admin/AdminMetrics';
 import AdminSettings from '../admin/AdminSettings';
 import AdminUsers from '../admin/AdminUsers';
 import Swal from 'sweetalert2';
@@ -58,6 +60,8 @@ export default function Admin() {
     { id: 'services', label: 'Services', icon: ConciergeBell },
     { id: 'portfolio', label: 'Portfolio', icon: Briefcase },
     { id: 'testimonials', label: 'Testimonials', icon: MessageSquare },
+    { id: 'metrics', label: 'Metrics', icon: TrendingUp },
+    { id: 'team', label: 'Team', icon: UsersRound },
     { id: 'users', label: 'Users', icon: UserCheck },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -106,6 +110,8 @@ export default function Admin() {
           {activeTab === 'services' && <AdminServices />}
           {activeTab === 'portfolio' && <AdminPortfolio />}
           {activeTab === 'testimonials' && <AdminTestimonials />}
+          {activeTab === 'metrics' && <AdminMetrics />}
+          {activeTab === 'team' && <AdminTeam />}
           {activeTab === 'users' && <AdminUsers />}
           {activeTab === 'settings' && <AdminSettings />}
         </div>
@@ -114,28 +120,49 @@ export default function Admin() {
   );
 }
 
+type Metric = {
+  _id: string;
+  title: string;
+  value: string;
+  suffix?: string;
+};
+
 function AdminDashboard() {
+  const [metrics, setMetrics] = useState<Metric[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/v1/metrics');
+        const result = await response.json();
+        if (result.success) {
+          setMetrics(result.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard metrics", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMetrics();
+  }, []);
+
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h2>
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg">
-          <div className="text-3xl font-bold text-blue-600 mb-2">500+</div>
-          <div className="text-gray-700">Projects Delivered</div>
+      {loading ? (
+        <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {metrics.map((metric) => (
+            <div key={metric._id} className={`bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-lg`}>
+              <div className="text-3xl font-bold text-blue-600 mb-2">{metric.value}{metric.suffix}</div>
+              <div className="text-gray-700">{metric.title}</div>
+            </div>
+          ))}
         </div>
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg">
-          <div className="text-3xl font-bold text-green-600 mb-2">200+</div>
-          <div className="text-gray-700">Happy Clients</div>
-        </div>
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg">
-          <div className="text-3xl font-bold text-purple-600 mb-2">50+</div>
-          <div className="text-gray-700">Team Members</div>
-        </div>
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-lg">
-          <div className="text-3xl font-bold text-orange-600 mb-2">98%</div>
-          <div className="text-gray-700">Satisfaction Rate</div>
-        </div>
-      </div>
+      )}
 
       <div className="mt-12">
         <h3 className="text-xl font-bold text-gray-900 mb-4">Content Overview</h3>

@@ -1,49 +1,82 @@
 import { useEffect, useState } from 'react';
-import { Save } from 'lucide-react';
+import { Save, Plus, Trash2 } from 'lucide-react';
 
 type CompanyInfo = {
-  id: string;
+  _id?: string;
   mission: string;
   vision: string;
-  about_text: string;
   story: string;
+  founded_year?: number;
   values: { title: string; description: string }[];
 };
 
+const API_BASE_URL = 'http://localhost:8000/api/v1/about';
+
 export default function AdminSettings() {
-  const [info, setInfo] = useState<CompanyInfo | null>({
-    id: '1',
-    mission: 'To deliver exceptional digital solutions',
-    vision: 'To be a leading provider of innovative technology services',
-    about_text: 'We are a team of passionate developers and designers.',
-    story: 'Our story...',
-    values: [{ title: 'Innovation', description: 'We embrace new technologies' }]
-  });
-  const [loading, setLoading] = useState(false);
+  const [info, setInfo] = useState<CompanyInfo | null>(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    // fetchInfo();
+    fetchInfo();
   }, []);
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    };
+  };
+
   const fetchInfo = async () => {
-    // Dummy
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch(API_BASE_URL);
+      if (!response.ok) throw new Error('Failed to fetch settings.');
+      const result = await response.json();
+      if (result.success) {
+        setInfo(result.data);
+      } else {
+        setError(result.message);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSave = async () => {
     if (!info) return;
     setSaving(true);
+    setError('');
+    setSuccess('');
 
-    // await fetch('YOUR_API_URL/settings', { method: 'PATCH', body: JSON.stringify(info) });
+    try {
+      const response = await fetch(API_BASE_URL, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(info),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Failed to save settings.');
 
-    setMessage('Settings saved successfully!');
-    setTimeout(() => setMessage(''), 3000);
-    setSaving(false);
+      setSuccess('Settings saved successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+      setInfo(result.data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
-    return <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>;
+    return <div className="flex justify-center items-center p-8"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
   }
 
   if (!info) {
@@ -53,10 +86,16 @@ export default function AdminSettings() {
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Company Settings</h2>
+      
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+          {error}
+        </div>
+      )}
 
-      {message && (
+      {success && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-          {message}
+          {success}
         </div>
       )}
 
@@ -98,12 +137,30 @@ export default function AdminSettings() {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-4">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Founded Year
+          </label>
+          <input
+            type="number"
+            value={info.founded_year || ''}
+            onChange={(e) => setInfo({ ...info, founded_year: Number(e.target.value) || undefined })}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600"
+          />
+        </div>
+
+        <div className="border-t pt-6">
+          <label className="block text-sm font-semibold text-gray-900 mb-4 flex justify-between items-center">
             Company Values
+            <button
+              onClick={() => setInfo({ ...info, values: [...info.values, { title: '', description: '' }] })}
+              className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium hover:bg-blue-200"
+            >
+              <Plus size={14} className="mr-1" /> Add Value
+            </button>
           </label>
           <div className="space-y-3">
             {info.values && info.values.map((value, idx) => (
-              <div key={idx} className="bg-gray-50 p-4 rounded-lg">
+              <div key={idx} className="bg-gray-50 p-4 rounded-lg border relative">
                 <input
                   type="text"
                   placeholder="Value title"
@@ -126,6 +183,16 @@ export default function AdminSettings() {
                   className="w-full px-3 py-2 border border-gray-300 rounded"
                   rows={2}
                 />
+                <button
+                  onClick={() => {
+                    const newValues = info.values.filter((_, i) => i !== idx);
+                    setInfo({ ...info, values: newValues });
+                  }}
+                  className="absolute top-2 right-2 p-1 text-red-500 hover:bg-red-100 rounded-full"
+                  aria-label="Remove value"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             ))}
           </div>
