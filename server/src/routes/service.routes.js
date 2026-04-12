@@ -10,7 +10,7 @@ import {
 
 const router = Router();
 
-// Public route to get all services for display on the site
+// Public route 
 
 router.route("/getAllServices").get(getAllServices);
 

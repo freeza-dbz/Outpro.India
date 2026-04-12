@@ -24,7 +24,7 @@ const portfolioSchema = new mongoose.Schema({
         trim: true,
     },
     images: {
-        type: [String], // Array of image URLs
+        type: String, // Array of image URLs
         required: true,
     },
     tags: {
