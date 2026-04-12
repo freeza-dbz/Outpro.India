@@ -31,6 +31,7 @@ export default function AdminPortfolio() {
     project_url: '',
     images: '', // Comma-separated URLs
     tags: '', // Comma-separated tags
+    is_featured: false,
   });
 
   useEffect(() => {
@@ -101,6 +102,7 @@ export default function AdminPortfolio() {
       project_url: '',
       images: '',
       tags: '',
+      is_featured: false,
     });
     setEditingId(null);
   };
@@ -254,6 +256,15 @@ export default function AdminPortfolio() {
               onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded"
             />
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.is_featured}
+                onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+              />
+              <span>Featured on Home Page</span>
+            </label>
             <div className="flex space-x-2">
               <button onClick={handleFormSubmit} className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
                 <Check size={18} className="mr-1" /> {editingId ? 'Save' : 'Create'}
@@ -290,6 +301,7 @@ export default function AdminPortfolio() {
                       project_url: project.project_url || '',
                       images: project.images || '',
                       tags: project.tags.join(', '),
+                      is_featured: project.is_featured,
                     });
                     setShowForm(true);
                     window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -87,7 +87,7 @@ export default function Home() {
             if (metricsData.success) setMetrics(metricsData.data.slice(0, 4)); // Show up to 4
         }
       } catch (error) {
-          console.error("Failed to fetch testimonials", error);
+          console.error("Failed to fetch home page data", error);
       } finally {
           setLoading(false);
       }
@@ -226,36 +226,42 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProjects.map((project) => (
-              <div
-                key={project._id}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100"
-              >
-                <div className="relative overflow-hidden h-48">
-                  <img
-                    src={project.images || '/placeholder.jpg'}
-                    alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-white font-bold text-lg">{project.title}</h3>
+            {featuredProjects.length > 0 ? (
+              featuredProjects.map((project) => (
+                <div
+                  key={project._id}
+                  className="group bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100"
+                >
+                  <div className="relative overflow-hidden h-48">
+                    <img
+                      src={project.images || '/placeholder.jpg'}
+                      alt={project.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h3 className="text-white font-bold text-lg">{project.title}</h3>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <p className="text-sm text-blue-600 font-semibold mb-2">{project.client}</p>
+                    <p className="text-gray-600 mb-4 line-clamp-2">{project.description}</p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {(project.tags || []).slice(0, 3).map((tag, idx) => (
+                        <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <div className="p-6">
-                  <p className="text-sm text-blue-600 font-semibold mb-2">{project.client}</p>
-                  <p className="text-gray-600 mb-4 line-clamp-2">{project.description}</p>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {(project.tags || []).slice(0, 3).map((tag, idx) => (
-                      <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center text-gray-500 py-8">
+                <p>No featured projects to display at the moment. Check back soon!</p>
               </div>
-            ))}
+            )}
           </div>
 
           <div className="text-center mt-12">

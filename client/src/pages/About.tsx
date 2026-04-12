@@ -178,7 +178,7 @@ export default function About() {
                   <div className="flex space-x-3">
                     {member.linkedin_url && (
                       <a
-                        href={member.linkedin_url}
+                        href={member.linkedin_url.startsWith('http') ? member.linkedin_url : `https://${member.linkedin_url}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-gray-400 hover:text-blue-600 transition-colors"

@@ -40,17 +40,26 @@ export default function Footer() {
             </p>
             <div className="flex space-x-4">
               {contactInfo.linkedin_url && (
-                <a href={contactInfo.linkedin_url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
+                <a 
+                // href={contactInfo.linkedin_url}
+                href={!contactInfo.linkedin_url.startsWith('http') ? `https://${contactInfo.linkedin_url}` : contactInfo.linkedin_url}
+                 target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
                   <Linkedin size={20} />
                 </a>
               )}
               {contactInfo.twitter_url && (
-                <a href={contactInfo.twitter_url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
+                <a 
+                // href={contactInfo.twitter_url} 
+                href={!contactInfo.twitter_url.startsWith('http') ? `https://${contactInfo.twitter_url}` : contactInfo.twitter_url}
+                target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
                   <Twitter size={20} />
                 </a>
               )}
               {contactInfo.facebook_url && (
-                <a href={contactInfo.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
+                <a 
+                // href={contactInfo.facebook_url}
+                href={!contactInfo.facebook_url.startsWith('http') ? `https://${contactInfo.facebook_url}` : contactInfo.facebook_url}
+                target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
                   <Facebook size={20} />
                 </a>
               )}

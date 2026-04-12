@@ -204,7 +204,18 @@ export default function Contact() {
                   <div className="border-t pt-8">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Follow us</h3>
                     <div className="flex space-x-4">
-                      {socialItems.map((item, index) => item.href && (<a key={index} href={item.href} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors" aria-label={item.name}><item.icon size={24} /></a>))}
+                      {socialItems.map((item, index) => item.href && (
+                        <a 
+                          key={index} 
+                          href={item.href.startsWith('http') ? item.href : `https://${item.href}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-gray-400 hover:text-blue-600 transition-colors" 
+                          aria-label={item.name}
+                        >
+                          <item.icon size={24} />
+                        </a>
+                      ))}
                     </div>
                   </div>
                 </div>
