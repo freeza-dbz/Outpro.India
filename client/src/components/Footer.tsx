@@ -1,8 +1,28 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Linkedin, Twitter, Facebook } from 'lucide-react';
 
+type ContactInfo = {
+  email?: string;
+  phone?: string;
+  address?: string;
+  linkedin_url?: string;
+  twitter_url?: string;
+  facebook_url?: string;
+};
+
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({});
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/v1/contact')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setContactInfo(data.data);
+      })
+      .catch(err => console.error("Failed to fetch contact info for footer", err));
+  }, []);
 
   return (
     <footer className="bg-gray-900 text-gray-300">
@@ -19,15 +39,21 @@ export default function Footer() {
               Empowering businesses through innovative digital solutions that drive growth and transformation.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="hover:text-blue-400 transition-colors">
-                <Linkedin size={20} />
-              </a>
-              <a href="#" className="hover:text-blue-400 transition-colors">
-                <Twitter size={20} />
-              </a>
-              <a href="#" className="hover:text-blue-400 transition-colors">
-                <Facebook size={20} />
-              </a>
+              {contactInfo.linkedin_url && (
+                <a href={contactInfo.linkedin_url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
+                  <Linkedin size={20} />
+                </a>
+              )}
+              {contactInfo.twitter_url && (
+                <a href={contactInfo.twitter_url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
+                  <Twitter size={20} />
+                </a>
+              )}
+              {contactInfo.facebook_url && (
+                <a href={contactInfo.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
+                  <Facebook size={20} />
+                </a>
+              )}
             </div>
           </div>
 
@@ -65,24 +91,28 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Contact Info</h3>
             <ul className="space-y-3">
-              <li className="flex items-start space-x-2">
-                <Mail size={16} className="mt-1 flex-shrink-0" />
-                <a href="mailto:contact@outpro.india" className="text-sm hover:text-blue-400 transition-colors">
-                  contact@outpro.india
-                </a>
-              </li>
-              <li className="flex items-start space-x-2">
-                <Phone size={16} className="mt-1 flex-shrink-0" />
-                <a href="tel:+911234567890" className="text-sm hover:text-blue-400 transition-colors">
-                  +91 123 456 7890
-                </a>
-              </li>
-              <li className="flex items-start space-x-2">
-                <MapPin size={16} className="mt-1 flex-shrink-0" />
-                <span className="text-sm">
-                  Mumbai, Maharashtra, India
-                </span>
-              </li>
+              {contactInfo.email && (
+                <li className="flex items-start space-x-2">
+                  <Mail size={16} className="mt-1 flex-shrink-0" />
+                  <a href={`mailto:${contactInfo.email}`} className="text-sm hover:text-blue-400 transition-colors">
+                    {contactInfo.email}
+                  </a>
+                </li>
+              )}
+              {contactInfo.phone && (
+                <li className="flex items-start space-x-2">
+                  <Phone size={16} className="mt-1 flex-shrink-0" />
+                  <a href={`tel:${contactInfo.phone}`} className="text-sm hover:text-blue-400 transition-colors">
+                    {contactInfo.phone}
+                  </a>
+                </li>
+              )}
+              {contactInfo.address && (
+                <li className="flex items-start space-x-2">
+                  <MapPin size={16} className="mt-1 flex-shrink-0" />
+                  <span className="text-sm">{contactInfo.address}</span>
+                </li>
+              )}
             </ul>
           </div>
         </div>
