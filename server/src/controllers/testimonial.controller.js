@@ -17,10 +17,10 @@ const getAllTestimonials = asyncHandler(async (req, res) => {
 });
 
 const createTestimonial = asyncHandler(async (req, res) => {
-    const { name, role, company, content, rating } = req.body;
+    const { name, role, company, content, rating, displayOrder } = req.body;
 
     if ([name, role, company, content].some((field) => !field || field.trim() === "")) {
-        throw new ApiError(400, "Name, role, company, and content are required");
+        throw new ApiError(400, "All fields are required");
     }
 
     const testimonial = await Testimonial.create({
@@ -28,6 +28,7 @@ const createTestimonial = asyncHandler(async (req, res) => {
         role,
         company,
         content,
+        displayOrder,
         rating: rating || 5,
     });
 
@@ -42,36 +43,49 @@ const createTestimonial = asyncHandler(async (req, res) => {
 
 const updateTestimonial = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { name, role, company, content, rating, is_featured, is_active, display_order } = req.body;
 
     if (!mongoose.isValidObjectId(id)) {
         throw new ApiError(400, "Invalid testimonial ID");
     }
 
-    // Create an update object with only the fields that are present in the request
+    const allowedFields = [
+        "name",
+        "role",
+        "company",
+        "content",
+        "rating",
+        "is_featured",
+        "is_active",
+        "display_order"
+    ];
+
     const updateData = {};
-    if (name) updateData.name = name;
-    if (role) updateData.role = role;
-    if (company) updateData.company = company;
-    if (content) updateData.content = content;
-    if (rating) updateData.rating = rating;
-    if (is_featured !== undefined) updateData.is_featured = is_featured;
-    if (is_active !== undefined) updateData.is_active = is_active;
-    if (display_order !== undefined) updateData.display_order = display_order;
+    allowedFields.forEach((field) => {
+        if (req.body[field] !== undefined) {
+            updateData[field] = req.body[field];
+        }
+    });
+
+    if (Object.keys(updateData).length === 0) {
+        throw new ApiError(400, "No valid fields provided for update");
+    }
 
     const testimonial = await Testimonial.findByIdAndUpdate(
         id,
         { $set: updateData },
-        { new: true }
+        {
+            new: true,
+            runValidators: true 
+        }
     );
 
     if (!testimonial) {
         throw new ApiError(404, "Testimonial not found");
     }
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, testimonial, "Testimonial updated successfully"));
+    return res.status(200).json(
+        new ApiResponse(200, testimonial, "Testimonial updated successfully")
+    );
 });
 
 const deleteTestimonial = asyncHandler(async (req, res) => {

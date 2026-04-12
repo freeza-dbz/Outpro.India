@@ -26,7 +26,7 @@ import userRouter from "./routes/user.routes.js";
 
 import testimonialRouter from "./routes/testimonial.routes.js";
 
-
+import serviceRouter from "./routes/service.routes.js";
 
 // routes declaration
 
@@ -34,5 +34,6 @@ app.use("/api/v1/users", userRouter);
 
 app.use("/api/v1/testimonials", testimonialRouter);
 
+app.use("/api/v1/services", serviceRouter);
 
 export { app };
