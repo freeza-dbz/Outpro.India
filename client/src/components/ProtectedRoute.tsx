@@ -1,18 +1,18 @@
 import { useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  adminOnly?: boolean;
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+export default function ProtectedRoute({ adminOnly = false }: ProtectedRouteProps) {
   const user = JSON.parse(localStorage.getItem('user') || 'null');
   const isAdmin = user?.isAdmin || user?.user?.isAdmin;
 
   useEffect(() => {
-    // Check for admin role if a user is present
-    if (user && !isAdmin) {
+    // Check for admin role if a user is present and the route is admin-only
+    if (adminOnly && user && !isAdmin) {
       Swal.fire({
         icon: 'error',
         title: 'Unauthorized Request',
@@ -20,15 +20,15 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         confirmButtonColor: '#3085d6',
       });
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, adminOnly]);
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!isAdmin) {
+  if (adminOnly && !isAdmin) {
     return <Navigate to="/" replace />; 
   }
 
-  return <>{children}</>;
+  return <Outlet />;
 }
