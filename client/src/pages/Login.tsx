@@ -22,7 +22,7 @@ export default function Login() {
 
     try {
       const payload = { email, password };
-      const res_data = await apiClient.post('/api/v1/users/login', payload);
+      const res_data = await apiClient.post(`${import.meta.env.VITE_API_URL}/api/v1/users/login`, payload);
 
       if (res_data.success) {
         // Success case
