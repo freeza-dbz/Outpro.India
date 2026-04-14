@@ -7,10 +7,12 @@ import cookieParser from "cookie-parser";
 const app = express();
 
 app.use(cors({
-    origin: 'http://localhost:5173',
-    methods: "GET, POST, PUT, DELETE, PATCH, HEAD",
-    credentials: true
-}))
+  origin: [
+    "http://localhost:5173",
+    "https://unlox-major-9hk4.vercel.app"
+  ],
+  credentials: true
+}));
 
 
 app.use(express.json({ limit: "16kb" }));
